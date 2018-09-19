@@ -69,7 +69,12 @@ def dict_to_tf_example(data, label):
 
 def create_tf_record(output_filename, file_pars):
     # Your code here
-    pass
+    writer = tf.python_io.TFRecordWriter(output_filename)
+
+    for item in file_pars:
+        example = dict_to_tf_example(item[0],item[1])
+        writer.write(example.SerializeToString())
+    writer.close()
 
 
 def read_images_names(root, train=True):
