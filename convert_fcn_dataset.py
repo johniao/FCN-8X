@@ -11,8 +11,8 @@ from object_detection.utils import dataset_util
 
 
 flags = tf.app.flags
-flags.DEFINE_string('data_dir', '', '/VOC2012')
-flags.DEFINE_string('output_dir', '', '/VOC2012')
+flags.DEFINE_string('data_dir', '/home/jy/VOC2012', 'aaaaa')
+flags.DEFINE_string('output_dir', '/home/jy/VOC2012', 'bbbbb')
 
 FLAGS = flags.FLAGS
 
@@ -58,9 +58,9 @@ def dict_to_tf_example(data, label):
     feature_dict = {
         'image/height': dataset_util.int64_feature(height),
         'image/width': dataset_util.int64_feature(width),
-        'image/filename': dataset_util.bytes_feature(data),
+        'image/filename': dataset_util.bytes_feature(data.encode('utf8')),
         'image/encoded': dataset_util.bytes_feature(encoded_data),
-        'image/label': dataset_util.bytes_feature(img_label),
+        'image/label': dataset_util.bytes_feature(encoded_label),
         'image/format': dataset_util.bytes_feature('png'.encode('utf8')),
     }
     example = tf.train.Example(features=tf.train.Features(feature=feature_dict))
@@ -73,7 +73,8 @@ def create_tf_record(output_filename, file_pars):
 
     for item in file_pars:
         example = dict_to_tf_example(item[0],item[1])
-        writer.write(example.SerializeToString())
+        if example:
+            writer.write(example.SerializeToString())
     writer.close()
 
 
