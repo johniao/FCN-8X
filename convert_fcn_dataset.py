@@ -11,8 +11,8 @@ from object_detection.utils import dataset_util
 
 
 flags = tf.app.flags
-flags.DEFINE_string('data_dir', '', 'Root directory to raw pet dataset.')
-flags.DEFINE_string('output_dir', '', 'Path to directory to output TFRecords.')
+flags.DEFINE_string('data_dir', '', '/VOC2012')
+flags.DEFINE_string('output_dir', '', '/VOC2012')
 
 FLAGS = flags.FLAGS
 
