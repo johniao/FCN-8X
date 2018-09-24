@@ -25,6 +25,7 @@ def parse_args(check=True):
     parser.add_argument('--checkpoint_path', type=str)
     parser.add_argument('--output_dir', type=str)
     parser.add_argument('--output_val_dir', type=str)
+    parser.add_argument('--output_ckpt_dir', type=str)
     parser.add_argument('--dataset_train', type=str)
     parser.add_argument('--dataset_val', type=str)
     parser.add_argument('--batch_size', type=int, default=16)
@@ -315,7 +316,7 @@ with sess:
             summary_string_writer.add_summary(summary_string, i)
 
         if gs % 1000 == 0:
-            save_path = saver.save(sess, os.path.join(log_folder, "model.ckpt"), global_step=gs)
+            save_path = saver.save(sess, os.path.join(FLAGS.output_ckpt_dir, "model.ckpt"), global_step=gs)
             logging.debug("Model saved in file: %s" % save_path)
 
         if gs % 200 == 0:
