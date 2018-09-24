@@ -24,10 +24,11 @@ def parse_args(check=True):
     parser = argparse.ArgumentParser()
     parser.add_argument('--checkpoint_path', type=str)
     parser.add_argument('--output_dir', type=str)
+    parser.add_argument('--output_val_dir', type=str)
     parser.add_argument('--dataset_train', type=str)
     parser.add_argument('--dataset_val', type=str)
     parser.add_argument('--batch_size', type=int, default=16)
-    parser.add_argument('--max_steps', type=int, default=1500)
+    parser.add_argument('--max_steps', type=int, default=2000)
     parser.add_argument('--learning_rate', type=float, default=1e-4)
 
     FLAGS, unparsed = parser.parse_known_args()
@@ -52,7 +53,7 @@ image_tensor, orig_img_tensor, annotation_tensor = tf.cond(is_training_placehold
 
 feed_dict_to_use = {is_training_placeholder: True}
 
-upsample_factor = 16
+upsample_factor = 8  # 8x为8,16x为16 modefy my 8x code
 number_of_classes = 21
 
 log_folder = os.path.join(FLAGS.output_dir, 'train')
@@ -106,6 +107,21 @@ upsampled_logits = tf.nn.conv2d_transpose(logits, upsample_filter_tensor_x2,
 
 upsampled_logits = upsampled_logits + aux_logits_16s
 
+# add my 8x code---start
+
+#获取pool3的logits,并卷积 bs×64×64×256 --> bs×64×64×21
+pool3_feature = end_points['vgg_16/pool3']
+with tf.variable_scope('vgg_16/fc8'):
+    aux_logits_8s = slim.conv2d(pool3_feature,number_of_classes,[1,1],activation_fn=None,weights_initializer=tf.zeros_initializer,scope='conv_pool3')
+
+#把上一步的结果两倍上采样 
+upsampled_logits = tf.nn.conv2d_transpose(upsampled_logits,upsample_filter_tensor_x2,output_shape=tf.shape(aux_logits_8s),strides=[1,2,2,1],padding='SAME')
+
+upsampled_logits = upsampled_logits + aux_logits_8s
+
+
+# add my 8x code---end
+
 upsample_filter_np_x16 = bilinear_upsample_weights(upsample_factor,
                                                    number_of_classes)
 
@@ -114,7 +130,6 @@ upsampled_logits = tf.nn.conv2d_transpose(upsampled_logits, upsample_filter_tens
                                           output_shape=upsampled_logits_shape,
                                           strides=[1, upsample_factor, upsample_factor, 1],
                                           padding='SAME')
-
 
 lbl_onehot = tf.one_hot(annotation_tensor, number_of_classes)
 cross_entropies = tf.nn.softmax_cross_entropy_with_logits(logits=upsampled_logits,
@@ -299,12 +314,12 @@ with sess:
 
             summary_string_writer.add_summary(summary_string, i)
 
-        if gs % 500 == 0:
+        if gs % 100 == 0:
             save_path = saver.save(sess, os.path.join(log_folder, "model.ckpt"), global_step=gs)
             logging.debug("Model saved in file: %s" % save_path)
 
         if gs % 200 == 0:
-            eval_folder = os.path.join(FLAGS.output_dir, 'eval')
+            eval_folder = FLAGS.output_val_dir
             if not os.path.exists(eval_folder):
                 os.makedirs(eval_folder)
 
