@@ -314,7 +314,7 @@ with sess:
 
             summary_string_writer.add_summary(summary_string, i)
 
-        if gs % 100 == 0:
+        if gs % 1000 == 0:
             save_path = saver.save(sess, os.path.join(log_folder, "model.ckpt"), global_step=gs)
             logging.debug("Model saved in file: %s" % save_path)
 
